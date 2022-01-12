@@ -84,6 +84,7 @@ public class AlbumsEndpoint {
       // NOTE: we normally call other classes to do something with our request
       System.out.println(
           "Request to add new album received: " + albumModel.name + ", " + albumModel.artist + ", " + albumModel.year);
+      System.out.println("Given id: " + albumModel.id);
 
       // NOTE: We often return some info to help the client know where to find the new
       // 'thing'

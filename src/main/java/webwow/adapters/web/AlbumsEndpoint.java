@@ -71,7 +71,7 @@ public class AlbumsEndpoint {
   private Response fetchAlbumById(Request request) {
     int id = Integer.parseInt(request.parameter("id"));
 
-    AlbumModel model = new AlbumModel(id, "Album name", "Artist", "Year");
+    AlbumModel model = new AlbumModel(id, "Album 1 name", "Artist 1", "Year 1");
     String jsonResponse = new Gson().toJson(model);
 
     return Response.ok().contentType(CONTENT_TYPE_JSON).done(jsonResponse);
@@ -88,7 +88,10 @@ public class AlbumsEndpoint {
 
       // NOTE: We often return some info to help the client know where to find the new
       // 'thing'
-      return Response.of(CREATED);
+      // String jsonResponse = new Gson().toJson(("localhost:8080/albums/" +
+      // albumModel.id));
+      String jsonResponse = new Gson().toJson(albumModel);
+      return Response.of(CREATED).contentType(CONTENT_TYPE_JSON).done(jsonResponse);
 
     } catch (IOException | NullPointerException e) {
       throw new AlbumsEndpointException(e);

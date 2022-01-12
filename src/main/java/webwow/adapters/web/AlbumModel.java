@@ -20,6 +20,7 @@ class AlbumModel {
     this.name = name;
     this.artist = artist;
     this.year = year;
+    this.id = 101;
     // TODO Calculate new id?
   }
 

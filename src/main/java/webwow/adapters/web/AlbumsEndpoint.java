@@ -71,7 +71,7 @@ public class AlbumsEndpoint {
   private Response fetchAlbumById(Request request) {
     int id = Integer.parseInt(request.parameter("id"));
 
-    AlbumModel model = new AlbumModel("an album name", id);
+    AlbumModel model = new AlbumModel(id, "Album name", "Artist", "Year");
     String jsonResponse = new Gson().toJson(model);
 
     return Response.ok().contentType(CONTENT_TYPE_JSON).done(jsonResponse);
@@ -82,7 +82,8 @@ public class AlbumsEndpoint {
       var albumModel = new Gson().fromJson(request.body(), AlbumModel.class);
 
       // NOTE: we normally call other classes to do something with our request
-      System.out.println("Request to add new album received: " + albumModel.name + ", " + albumModel.number);
+      System.out.println(
+          "Request to add new album received: " + albumModel.name + ", " + albumModel.artist + ", " + albumModel.year);
 
       // NOTE: We often return some info to help the client know where to find the new
       // 'thing'
@@ -94,7 +95,8 @@ public class AlbumsEndpoint {
   }
 
   private Response fetchAllAlbums(Request request) {
-    var allModels = List.of(new AlbumModel("thing 1", 101), new AlbumModel("thing 2", 102));
+    var allModels = List.of(new AlbumModel(1, "Telefone", "Noname", "2016"),
+        new AlbumModel(2, "How Long", "Ariel Posen", "2019"));
 
     String jsonResponse = new Gson().toJson(allModels);
     return Response.ok().contentType(CONTENT_TYPE_JSON).done(jsonResponse);

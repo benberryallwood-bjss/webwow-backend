@@ -5,11 +5,22 @@ package webwow.adapters.web;
  * response
  */
 class AlbumModel {
-  String name;
-  int number;
 
-  public AlbumModel(String name, int number) {
-    this.name = name;
-    this.number = number;
+  int id;
+  String name;
+  String artist;
+  String year;
+
+  public AlbumModel(int id, String name, String artist, String year) {
+    this(name, artist, year);
+    this.id = id;
   }
+
+  public AlbumModel(String name, String artist, String year) {
+    this.name = name;
+    this.artist = artist;
+    this.year = year;
+    // TODO Calculate new id?
+  }
+
 }

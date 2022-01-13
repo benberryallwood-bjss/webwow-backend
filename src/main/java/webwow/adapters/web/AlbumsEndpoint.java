@@ -28,7 +28,7 @@ public class AlbumsEndpoint {
   private WebServer webServer;
 
   public AlbumsEndpoint() {
-    this(WebServer.create());
+    this(WebServer.create("127.0.0.1", 8080));
   }
 
   AlbumsEndpoint(WebServer server) {

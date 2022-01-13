@@ -1,6 +1,7 @@
 package webwow.adapters.web;
 
 import com.google.gson.Gson;
+import com.vtence.molecule.Middleware;
 import com.vtence.molecule.Request;
 import com.vtence.molecule.Response;
 import com.vtence.molecule.WebServer;
@@ -32,13 +33,20 @@ public class AlbumsEndpoint {
   }
 
   AlbumsEndpoint(WebServer server) {
-    this.webServer = server;
+    webServer = server;
+    addAllowCrossOriginMiddleware();
 
     try {
       run();
     } catch (IOException ioe) {
       throw new AlbumsEndpointException(ioe);
     }
+  }
+
+  private void addAllowCrossOriginMiddleware() {
+    Middleware allowCrossOrigin = next -> request -> next.handle(request)
+        .whenSuccessful(resp -> resp.addHeader("Access-Control-Allow-Origin", "*"));
+    webServer.add(allowCrossOrigin);
   }
 
   public String getUri() {
@@ -103,7 +111,6 @@ public class AlbumsEndpoint {
         new AlbumModel(2, "How Long", "Ariel Posen", "2019"));
 
     String jsonResponse = new Gson().toJson(allModels);
-    return Response.ok().contentType(CONTENT_TYPE_JSON)
-        .addHeader("Access-Control-Allow-Origin", "http://localhost:8081").done(jsonResponse);
+    return Response.ok().contentType(CONTENT_TYPE_JSON).done(jsonResponse);
   }
 }

@@ -103,6 +103,7 @@ public class AlbumsEndpoint {
         new AlbumModel(2, "How Long", "Ariel Posen", "2019"));
 
     String jsonResponse = new Gson().toJson(allModels);
-    return Response.ok().contentType(CONTENT_TYPE_JSON).done(jsonResponse);
+    return Response.ok().contentType(CONTENT_TYPE_JSON)
+        .addHeader("Access-Control-Allow-Origin", "http://localhost:8081").done(jsonResponse);
   }
 }

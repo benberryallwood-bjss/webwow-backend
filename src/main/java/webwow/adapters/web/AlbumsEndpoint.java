@@ -1,21 +1,21 @@
 package webwow.adapters.web;
 
-import com.google.gson.Gson;
-import com.vtence.molecule.Middleware;
-import com.vtence.molecule.Request;
-import com.vtence.molecule.Response;
-import com.vtence.molecule.WebServer;
-import com.vtence.molecule.http.HttpMethod;
-import com.vtence.molecule.http.HttpStatus;
-import com.vtence.molecule.routing.Routes;
-import webwow.adapters.database.DatabaseConnector;
+import static com.vtence.molecule.http.HttpStatus.CREATED;
+import static com.vtence.molecule.http.HttpStatus.NO_CONTENT;
 
 import java.io.IOException;
 import java.sql.Connection;
-import java.util.ArrayList;
 import java.util.List;
 
-import static com.vtence.molecule.http.HttpStatus.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.vtence.molecule.Request;
+import com.vtence.molecule.Response;
+import com.vtence.molecule.WebServer;
+import com.vtence.molecule.routing.Routes;
+
+import webwow.adapters.database.DAO;
+import webwow.adapters.database.DatabaseConnector;
 
 /**
  * This endpoint class belongs to the web adapter layer.
@@ -29,88 +29,86 @@ import static com.vtence.molecule.http.HttpStatus.*;
  */
 public class AlbumsEndpoint {
 
-  private static final String CONTENT_TYPE_JSON = "application/json";
-  private WebServer webServer;
-  private Connection databaseConnection;
+    private static final String CONTENT_TYPE_JSON = "application/json";
+    private WebServer webServer;
+    private Connection databaseConnection;
+    private DAO dao;
 
-  public AlbumsEndpoint() {
-    this(WebServer.create("127.0.0.1", 8080));
-  }
-
-  AlbumsEndpoint(WebServer server) {
-    webServer = server
-        .add(new AllowCrossOrigin("http://127.0.0.1:5500"))
-        .add(new PreflightHandler());
-    databaseConnection = DatabaseConnector.getConnection();
-
-    try {
-      run();
-    } catch (IOException ioe) {
-      throw new AlbumsEndpointException(ioe);
+    public AlbumsEndpoint() {
+        this(WebServer.create("127.0.0.1", 8080));
     }
-  }
 
-  public String getUri() {
-    return webServer.uri() + "/albums";
-  }
+    AlbumsEndpoint(WebServer server) {
+        webServer = server.add(new AllowCrossOrigin("http://127.0.0.1:5500")).add(new PreflightHandler());
+        databaseConnection = DatabaseConnector.getConnection();
+        dao = new DAO(databaseConnection);
 
-  private void run() throws IOException {
-    webServer.route((new Routes() {
-      {
-        get("/albums").to(request -> fetchAllAlbums(request));
-
-        post("/albums").to(request -> addAlbum(request));
-
-        delete("/albums/:id").to(request -> deleteAlbum(request));
-
-        put("/albums/:id").to(request -> editAlbum(request));
-      }
-    }));
-  }
-
-  private Response editAlbum(Request request) {
-      System.out.println("Recieved PUT request");
-      return Response.ok().done();
-  }
-
-  private Response deleteAlbum(Request request) {
-    int id = Integer.parseInt(request.parameter("id"));
-
-    // NOTE: get some object to delete this album
-    System.out.println("DELETE called with id " + id);
-
-    return Response.of(NO_CONTENT).done();
-  }
-
-  private Response addAlbum(Request request) {
-      System.out.println("POST request received");
-    try {
-      var albumModel = new Gson().fromJson(request.body(), AlbumModel.class);
-
-      // NOTE: we normally call other classes to do something with our request
-      System.out.println(
-          "Request to add new album received: " + albumModel.name + ", " + albumModel.artist + ", " + albumModel.year);
-      System.out.println("Given id: " + albumModel.id);
-
-      // NOTE: We often return some info to help the client know where to find the new
-      // 'thing'
-      // String jsonResponse = new Gson().toJson(("localhost:8080/albums/" +
-      // albumModel.id));
-      String jsonResponse = new Gson().toJson(albumModel);
-      System.out.println("POST request received");
-      return Response.of(CREATED).contentType(CONTENT_TYPE_JSON).done(jsonResponse);
-
-    } catch (IOException | NullPointerException e) {
-      System.out.println("POST request received");
-      throw new AlbumsEndpointException(e);
+        try {
+            run();
+        } catch (IOException ioe) {
+            throw new AlbumsEndpointException(ioe);
+        }
     }
-  }
 
-  private Response fetchAllAlbums(Request request) {
-    var allModels = List.of(new AlbumModel(1, "Telefone", "Noname", "2016"),
-        new AlbumModel(2, "How Long", "Ariel Posen", "2019"));
+    public String getUri() {
+        return webServer.uri() + "/albums";
+    }
 
-    String jsonResponse = new Gson().toJson(allModels);
-    return Response.ok().contentType(CONTENT_TYPE_JSON).done(jsonResponse);
-  }
+    private void run() throws IOException {
+        webServer.route((new Routes() {
+            {
+                get("/albums").to(request -> fetchAllAlbums(request));
+
+                post("/albums").to(request -> addAlbum(request));
+
+                delete("/albums/:id").to(request -> deleteAlbum(request));
+
+                put("/albums/:id").to(request -> editAlbum(request));
+            }
+        }));
+    }
+
+    private Response editAlbum(Request request) {
+        int id = Integer.parseInt(request.parameter("id"));
+
+        try {
+            AlbumModel album = new Gson().fromJson(request.body(), AlbumModel.class);
+            album.setId(id);
+            dao.editAlbum(album);
+            return Response.of(NO_CONTENT).done();
+        } catch (IOException | JsonSyntaxException e) {
+            System.out.println("Error while editing album");
+            e.printStackTrace();
+            throw new AlbumsEndpointException(e);
+        }
+    }
+
+    private Response deleteAlbum(Request request) {
+        int id = Integer.parseInt(request.parameter("id"));
+        dao.deleteAlbum(id);
+
+        return Response.of(NO_CONTENT).done();
+    }
+
+    private Response addAlbum(Request request) {
+        try {
+            // Can't get this to work with a record
+            AlbumModel album = new Gson().fromJson(request.body(), AlbumModel.class);
+            int givenID = dao.addAlbum(album);
+
+            String jsonResponse = new Gson().toJson(("localhost:8080/albums/" + givenID));
+            return Response.of(CREATED).contentType(CONTENT_TYPE_JSON).done(jsonResponse);
+
+        } catch (IOException | NullPointerException e) {
+            System.out.println("Error in addAlbum");
+            throw new AlbumsEndpointException(e);
+        }
+    }
+
+    private Response fetchAllAlbums(Request request) {
+        List<AlbumModel> albums = dao.getAllAlbums();
+        String jsonResponse = new Gson().toJson(albums);
+
+        return Response.ok().contentType(CONTENT_TYPE_JSON).done(jsonResponse);
+    }
 }

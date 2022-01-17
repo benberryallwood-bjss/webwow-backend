@@ -1,27 +1,46 @@
 package webwow.adapters.web;
 
-/**
- * This is a simple data structure that maps directly to the JSON used in the
- * response
- */
-class AlbumModel {
+public class AlbumModel {
 
-  int id;
-  String name;
-  String artist;
-  String year;
+    int id;
+    String name;
+    String artist;
+    String year;
 
-  public AlbumModel(int id, String name, String artist, String year) {
-    this(name, artist, year);
-    this.id = id;
-  }
+    public AlbumModel(int id, String name, String artist, String year) {
+        this(name, artist, year);
+        this.id = id;
+    }
 
-  public AlbumModel(String name, String artist, String year) {
-    this.name = name;
-    this.artist = artist;
-    this.year = year;
-    this.id = 101;
-    // TODO Calculate new id?
-  }
+    public AlbumModel(String name, String artist, String year) {
+        this.name = name;
+        this.artist = artist;
+        this.year = year;
+    }
+
+    public int id() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public String artist() {
+        return artist;
+    }
+
+    public String year() {
+        return year;
+    }
+
+    @Override
+    public String toString() {
+        return "AlbumModel [artist=" + artist + ", id=" + id + ", name=" + name + ", year=" + year + "]";
+    }
 
 }

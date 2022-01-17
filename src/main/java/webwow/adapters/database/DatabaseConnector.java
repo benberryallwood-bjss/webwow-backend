@@ -2,13 +2,10 @@ package webwow.adapters.database;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.util.List;
 
-import org.jdbi.v3.core.Jdbi;
+public class DatabaseConnector {
 
-public class DatabaseAdapter {
-
-    public DatabaseAdapter() {
+    public static Connection getConnection() {
         Connection connection = null;
         try {
             Class.forName("org.postgresql.Driver");
@@ -21,11 +18,7 @@ public class DatabaseAdapter {
         } catch (Exception e) {
             System.out.println(e);
         }
+        return connection;
     }
 
-//    public List<Album> getAllAlbums() {
-//        jdbi.withHandle(handle -> {
-//            return computeValue(handle);
-//        });
-//    }
 }

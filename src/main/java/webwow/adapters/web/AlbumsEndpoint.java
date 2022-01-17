@@ -92,15 +92,6 @@ public class AlbumsEndpoint {
     return Response.of(NO_CONTENT).done();
   }
 
-  private Response fetchAlbumById(Request request) {
-    int id = Integer.parseInt(request.parameter("id"));
-
-    AlbumModel model = new AlbumModel(id, "Album 1 name", "Artist 1", "Year 1");
-    String jsonResponse = new Gson().toJson(model);
-
-    return Response.ok().contentType(CONTENT_TYPE_JSON).done(jsonResponse);
-  }
-
   private Response addAlbum(Request request) {
       System.out.println("POST request received");
     try {

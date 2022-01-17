@@ -5,8 +5,10 @@ import com.vtence.molecule.Middleware;
 import com.vtence.molecule.Request;
 import com.vtence.molecule.Response;
 import com.vtence.molecule.WebServer;
+import com.vtence.molecule.http.HttpMethod;
 import com.vtence.molecule.http.HttpStatus;
 import com.vtence.molecule.routing.Routes;
+import webwow.adapters.database.DatabaseAdapter;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,6 +29,7 @@ public class AlbumsEndpoint {
 
   private static final String CONTENT_TYPE_JSON = "application/json";
   private WebServer webServer;
+  private DatabaseAdapter databaseAdapter;
 
   public AlbumsEndpoint() {
     this(WebServer.create("127.0.0.1", 8080));
@@ -35,6 +38,7 @@ public class AlbumsEndpoint {
   AlbumsEndpoint(WebServer server) {
     webServer = server;
     addAllowCrossOriginMiddleware();
+    databaseAdapter = new DatabaseAdapter();
 
     try {
       run();
@@ -44,8 +48,10 @@ public class AlbumsEndpoint {
   }
 
   private void addAllowCrossOriginMiddleware() {
-    Middleware allowCrossOrigin = next -> request -> next.handle(request)
-        .whenSuccessful(resp -> resp.addHeader("Access-Control-Allow-Origin", "*"));
+    Middleware allowCrossOrigin = next -> request -> 
+        next.handle(request)
+        .whenSuccessful(resp ->
+                resp.addHeader("Access-Control-Allow-Origin", "http://127.0.0.1:5500"));
     webServer.add(allowCrossOrigin);
   }
 
@@ -60,11 +66,21 @@ public class AlbumsEndpoint {
 
         get("/albums/:id").to(request -> fetchAlbumById(request));
 
+        options("/albums").to(request -> optionsResponseAllowMethods("POST"));
         post("/albums").to(request -> addAlbum(request));
 
+        options("/albums/:id").to(request -> optionsResponseAllowMethods("PUT, DELETE"));
         delete("/albums/:id").to(request -> deleteAlbum(request));
+        put("/albums/:id").to(request -> Response.ok().done());
       }
     }));
+  }
+
+  private Response optionsResponseAllowMethods(String methodsToAllow) {
+      return Response.ok()
+        .addHeader("Access-Control-Allow-Methods", methodsToAllow)
+        .addHeader("Access-Control-Allow-Headers", "content-type")
+        .done();
   }
 
   private Response deleteAlbum(Request request) {
@@ -86,6 +102,7 @@ public class AlbumsEndpoint {
   }
 
   private Response addAlbum(Request request) {
+      System.out.println("POST request received");
     try {
       var albumModel = new Gson().fromJson(request.body(), AlbumModel.class);
 
@@ -99,9 +116,11 @@ public class AlbumsEndpoint {
       // String jsonResponse = new Gson().toJson(("localhost:8080/albums/" +
       // albumModel.id));
       String jsonResponse = new Gson().toJson(albumModel);
+      System.out.println("POST request received");
       return Response.of(CREATED).contentType(CONTENT_TYPE_JSON).done(jsonResponse);
 
     } catch (IOException | NullPointerException e) {
+      System.out.println("POST request received");
       throw new AlbumsEndpointException(e);
     }
   }

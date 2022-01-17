@@ -8,9 +8,11 @@ import com.vtence.molecule.WebServer;
 import com.vtence.molecule.http.HttpMethod;
 import com.vtence.molecule.http.HttpStatus;
 import com.vtence.molecule.routing.Routes;
-import webwow.adapters.database.DatabaseAdapter;
+import webwow.adapters.database.DatabaseConnector;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.vtence.molecule.http.HttpStatus.*;
@@ -29,30 +31,23 @@ public class AlbumsEndpoint {
 
   private static final String CONTENT_TYPE_JSON = "application/json";
   private WebServer webServer;
-  private DatabaseAdapter databaseAdapter;
+  private Connection databaseConnection;
 
   public AlbumsEndpoint() {
     this(WebServer.create("127.0.0.1", 8080));
   }
 
   AlbumsEndpoint(WebServer server) {
-    webServer = server;
-    addAllowCrossOriginMiddleware();
-    databaseAdapter = new DatabaseAdapter();
+    webServer = server
+        .add(new AllowCrossOrigin("http://127.0.0.1:5500"))
+        .add(new PreflightHandler());
+    databaseConnection = DatabaseConnector.getConnection();
 
     try {
       run();
     } catch (IOException ioe) {
       throw new AlbumsEndpointException(ioe);
     }
-  }
-
-  private void addAllowCrossOriginMiddleware() {
-    Middleware allowCrossOrigin = next -> request -> 
-        next.handle(request)
-        .whenSuccessful(resp ->
-                resp.addHeader("Access-Control-Allow-Origin", "http://127.0.0.1:5500"));
-    webServer.add(allowCrossOrigin);
   }
 
   public String getUri() {
@@ -64,23 +59,18 @@ public class AlbumsEndpoint {
       {
         get("/albums").to(request -> fetchAllAlbums(request));
 
-        get("/albums/:id").to(request -> fetchAlbumById(request));
-
-        options("/albums").to(request -> optionsResponseAllowMethods("POST"));
         post("/albums").to(request -> addAlbum(request));
 
-        options("/albums/:id").to(request -> optionsResponseAllowMethods("PUT, DELETE"));
         delete("/albums/:id").to(request -> deleteAlbum(request));
-        put("/albums/:id").to(request -> Response.ok().done());
+
+        put("/albums/:id").to(request -> editAlbum(request));
       }
     }));
   }
 
-  private Response optionsResponseAllowMethods(String methodsToAllow) {
-      return Response.ok()
-        .addHeader("Access-Control-Allow-Methods", methodsToAllow)
-        .addHeader("Access-Control-Allow-Headers", "content-type")
-        .done();
+  private Response editAlbum(Request request) {
+      System.out.println("Recieved PUT request");
+      return Response.ok().done();
   }
 
   private Response deleteAlbum(Request request) {

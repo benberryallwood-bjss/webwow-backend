@@ -1,6 +1,6 @@
 package webwow;
 
-import webwow.adapters.database.DatabaseAdapter;
+import webwow.adapters.database.DatabaseConnector;
 import webwow.adapters.web.AlbumsEndpoint;
 import webwow.adapters.web.AlbumsEndpointException;
 

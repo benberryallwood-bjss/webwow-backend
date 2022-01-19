@@ -4,7 +4,6 @@ import static com.vtence.molecule.http.HttpStatus.CREATED;
 import static com.vtence.molecule.http.HttpStatus.NO_CONTENT;
 
 import java.io.IOException;
-import java.sql.Connection;
 import java.util.List;
 
 import com.google.gson.Gson;
@@ -12,10 +11,10 @@ import com.google.gson.JsonSyntaxException;
 import com.vtence.molecule.Request;
 import com.vtence.molecule.Response;
 import com.vtence.molecule.WebServer;
+import com.vtence.molecule.http.HttpStatus;
 import com.vtence.molecule.routing.Routes;
 
 import webwow.adapters.database.DAO;
-import webwow.adapters.database.DatabaseConnector;
 
 /**
  * This endpoint class belongs to the web adapter layer.
@@ -31,17 +30,19 @@ public class AlbumsEndpoint {
 
     private static final String CONTENT_TYPE_JSON = "application/json";
     private WebServer webServer;
-    private Connection databaseConnection;
     private DAO dao;
 
-    public AlbumsEndpoint() {
+    public AlbumsEndpoint(DAO dao) {
+        this();
+        this.dao = dao;
+    }
+
+    private AlbumsEndpoint() {
         this(WebServer.create("127.0.0.1", 8080));
     }
 
-    AlbumsEndpoint(WebServer server) {
+    private AlbumsEndpoint(WebServer server) {
         webServer = server.add(new AllowCrossOrigin("http://127.0.0.1:5500")).add(new PreflightHandler());
-        databaseConnection = DatabaseConnector.getConnection();
-        dao = new DAO(databaseConnection);
 
         try {
             run();
@@ -57,7 +58,7 @@ public class AlbumsEndpoint {
     private void run() throws IOException {
         webServer.route((new Routes() {
             {
-                get("/albums").to(request -> fetchAllAlbums(request));
+                get("/albums").to(request -> getAllAlbums(request));
 
                 post("/albums").to(request -> addAlbum(request));
 
@@ -70,26 +71,11 @@ public class AlbumsEndpoint {
         }));
     }
 
-    private Response editAlbum(Request request) {
-        int id = Integer.parseInt(request.parameter("id"));
+    private Response getAllAlbums(Request request) {
+        List<AlbumModel> albums = dao.getAllAlbums();
+        String jsonResponse = new Gson().toJson(albums);
 
-        try {
-            AlbumModel album = new Gson().fromJson(request.body(), AlbumModel.class);
-            album.setId(id);
-            dao.editAlbum(album);
-            return Response.of(NO_CONTENT).done();
-        } catch (IOException | JsonSyntaxException e) {
-            System.out.println("Error while editing album");
-            e.printStackTrace();
-            throw new AlbumsEndpointException(e);
-        }
-    }
-
-    private Response deleteAlbum(Request request) {
-        int id = Integer.parseInt(request.parameter("id"));
-        dao.deleteAlbum(id);
-
-        return Response.of(NO_CONTENT).done();
+        return Response.ok().contentType(CONTENT_TYPE_JSON).done(jsonResponse);
     }
 
     private Response addAlbum(Request request) {
@@ -107,11 +93,26 @@ public class AlbumsEndpoint {
         }
     }
 
-    private Response fetchAllAlbums(Request request) {
-        List<AlbumModel> albums = dao.getAllAlbums();
-        String jsonResponse = new Gson().toJson(albums);
+    private Response deleteAlbum(Request request) {
+        int id = Integer.parseInt(request.parameter("id"));
+        dao.deleteAlbum(id);
 
-        return Response.ok().contentType(CONTENT_TYPE_JSON).done(jsonResponse);
+        return Response.of(NO_CONTENT).done();
+    }
+
+    private Response editAlbum(Request request) {
+        int id = Integer.parseInt(request.parameter("id"));
+
+        try {
+            AlbumModel album = new Gson().fromJson(request.body(), AlbumModel.class);
+            album.setId(id);
+            dao.editAlbum(album);
+            return Response.of(NO_CONTENT).done();
+        } catch (IOException | JsonSyntaxException e) {
+            System.out.println("Error while editing album");
+            e.printStackTrace();
+            return Response.of(HttpStatus.INTERNAL_SERVER_ERROR).done();
+        }
     }
 
     private Response getFavouriteYear(Request request) {

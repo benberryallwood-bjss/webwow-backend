@@ -64,6 +64,8 @@ public class AlbumsEndpoint {
                 delete("/albums/:id").to(request -> deleteAlbum(request));
 
                 put("/albums/:id").to(request -> editAlbum(request));
+
+                get("/favourite-year").to(request -> getFavouriteYear(request));
             }
         }));
     }
@@ -108,6 +110,13 @@ public class AlbumsEndpoint {
     private Response fetchAllAlbums(Request request) {
         List<AlbumModel> albums = dao.getAllAlbums();
         String jsonResponse = new Gson().toJson(albums);
+
+        return Response.ok().contentType(CONTENT_TYPE_JSON).done(jsonResponse);
+    }
+
+    private Response getFavouriteYear(Request request) {
+        String favouriteYear = dao.getFavouriteYear();
+        String jsonResponse = new Gson().toJson(favouriteYear);
 
         return Response.ok().contentType(CONTENT_TYPE_JSON).done(jsonResponse);
     }

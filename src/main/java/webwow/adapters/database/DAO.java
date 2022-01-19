@@ -8,24 +8,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import webwow.adapters.web.AlbumModel;
-import webwow.adapters.web.FullAlbumModel;
 
 public class DAO {
-    private Connection databaseConnection;
-    private Statement statement;
+    Connection databaseConnection;
 
     public DAO(Connection databaseConnection) {
         this.databaseConnection = databaseConnection;
-        try {
-            statement = databaseConnection.createStatement();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 
     public int nextID() {
         int result = -1;
-        try {
+        try (Statement statement = databaseConnection.createStatement()) {
             String query = "select max(\"ID\") from \"Albums\";";
             ResultSet resultSet = statement.executeQuery(query);
             resultSet.next();
@@ -38,7 +31,7 @@ public class DAO {
 
     public List<AlbumModel> getAllAlbums() {
         List<AlbumModel> albums = new ArrayList<>();
-        try {
+        try (Statement statement = databaseConnection.createStatement()) {
             String query = "select * from \"Albums\" order by \"Artist\", \"Year\", \"Name\";";
             ResultSet result = statement.executeQuery(query);
             while (result.next()) {
@@ -48,7 +41,8 @@ public class DAO {
                 String year = result.getString(4);
                 albums.add(new AlbumModel(id, name, artist, year));
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
+            System.out.println("Error in getAllAlbums");
             e.printStackTrace();
         }
         return albums;
@@ -56,7 +50,7 @@ public class DAO {
 
     public int addAlbum(AlbumModel album) {
         int id = nextID();
-        try {
+        try (Statement statement = databaseConnection.createStatement()) {
             String query = "insert into \"Albums\"" + "(\"ID\", \"Name\", \"Artist\", \"Year\")" + "values ('" + id
                     + "', '" + album.name() + "', '" + album.artist() + "', '" + album.year() + "');";
             statement.executeUpdate(query);
@@ -67,7 +61,7 @@ public class DAO {
     }
 
     public void editAlbum(AlbumModel album) {
-        try {
+        try (Statement statement = databaseConnection.createStatement()) {
             String query = "update \"Albums\"" + "set \"Name\" = '" + album.name() + "', \"Artist\" = '"
                     + album.artist() + "', \"Year\" = '" + album.year() + "'" + "where \"ID\" = " + album.id() + ";";
             statement.executeUpdate(query);
@@ -77,11 +71,25 @@ public class DAO {
     }
 
     public void deleteAlbum(int id) {
-        try {
+        try (Statement statement = databaseConnection.createStatement()) {
             String query = "delete from \"Albums\" where \"ID\" = " + id + ";";
             statement.executeUpdate(query);
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public String getFavouriteYear() {
+        String favouriteYear = "";
+        try (Statement statement = databaseConnection.createStatement()) {
+            String query = "select \"Year\" from \"Albums\" group by \"Year\" order by count(\"ID\") desc;";
+            ResultSet resultSet = statement.executeQuery(query);
+            resultSet.next();
+            favouriteYear = resultSet.getString(1);
+        } catch (SQLException e) {
+            System.out.println("Error in getFavouriteYear");
+            e.printStackTrace();
+        }
+        return favouriteYear;
     }
 }

@@ -1,4 +1,4 @@
-package webwow.adapters.web;
+package webwow.adapters.web.filters;
 
 import com.vtence.molecule.Application;
 import com.vtence.molecule.Middleware;

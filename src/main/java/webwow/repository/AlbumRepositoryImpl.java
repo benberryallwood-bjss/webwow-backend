@@ -15,8 +15,9 @@ public class AlbumRepositoryImpl implements AlbumRepository {
 
     @Override
     public int addAlbum(AlbumModel album) {
-        int givenID = dao.addAlbum(album);
-        return givenID;
+        dao.addAlbum(album);
+        int id = dao.getLastID();
+        return id;
     }
 
     @Override

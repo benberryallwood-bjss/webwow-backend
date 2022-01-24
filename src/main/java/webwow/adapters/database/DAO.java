@@ -16,9 +16,7 @@ public class DAO {
         this.databaseConnection = databaseConnection;
     }
 
-    @Deprecated
-    // Use SERIAL type in db instead
-    public int nextID() {
+    public int getLastID() {
         int result = -1;
         try (Statement statement = databaseConnection.createStatement()) {
             String query = "SELECT MAX(id) FROM album;";
@@ -28,7 +26,7 @@ public class DAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return result + 1;
+        return result;
     }
 
     public List<AlbumModel> getAllAlbums() {
@@ -60,23 +58,18 @@ public class DAO {
         return albums;
     }
 
-    public int addAlbum(AlbumModel album) {
-        int id = 0;
+    public void addAlbum(AlbumModel album) {
         try (Statement statement = databaseConnection.createStatement()) {
-            id = tryToAddAlbum(statement, album);
+            tryToAddAlbum(statement, album);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return id;
     }
 
-    private int tryToAddAlbum(Statement statement, AlbumModel album) throws SQLException {
-        int newID = nextID();
+    private void tryToAddAlbum(Statement statement, AlbumModel album) throws SQLException {
         String query = String.format("INSERT INTO album (name, artist, year) VALUES ('%s', '%s', '%s');",
                 album.name(), album.artist(), album.year());
         statement.executeUpdate(query);
-        // TODO Get new id from SERIAL
-        return newID;
     }
 
     public void editAlbum(AlbumModel album) {

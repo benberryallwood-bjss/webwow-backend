@@ -16,8 +16,8 @@ public class AllowCrossOrigin implements Middleware {
     }
 
     @Override
-    public Application then(Application arg0) {
-        return request -> arg0.handle(request)
+    public Application then(Application next) {
+        return request -> next.handle(request)
                 .whenSuccessful(resp -> resp.addHeader("Access-Control-Allow-Origin", origin));
     }
 

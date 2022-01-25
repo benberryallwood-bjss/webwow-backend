@@ -1,20 +1,22 @@
 package webwow.adapters.web;
 
 import com.vtence.molecule.WebServer;
-import com.vtence.molecule.testing.http.Form;
 
-import java.io.IOException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
+import webwow.adapters.database.DatabaseConnector;
+import webwow.adapters.database.jdbc.AlbumRepositoryImpl;
+import webwow.adapters.database.jdbc.JdbcAlbumDao;
+import webwow.domain.AlbumRepository;
+import java.sql.Connection;
 
-import static com.vtence.molecule.testing.http.HttpResponseAssert.assertThat;
 import static java.net.http.HttpResponse.BodyHandlers.ofString;
 
-public class ThingsEndpointTest {
+public class AlbumsEndpointTest {
 
-//    ThingsEndpoint rest = new ThingsEndpoint();
-//    WebServer server = WebServer.create(9999);
-//
+    WebServer server = WebServer.create(9999);
+    Connection databaseConnection = DatabaseConnector.getConnection("");
+    AlbumRepository repository = new AlbumRepositoryImpl(new JdbcAlbumDao(databaseConnection));
+    AlbumsEndpoint albumsEndpoint = new AlbumsEndpoint(repository, server);
+
 //    HttpClient client = HttpClient.newHttpClient();
 //    HttpRequest.Builder request = HttpRequest.newBuilder(server.uri());
 //

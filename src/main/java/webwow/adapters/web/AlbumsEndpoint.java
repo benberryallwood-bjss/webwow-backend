@@ -16,7 +16,8 @@ import com.vtence.molecule.routing.Routes;
 
 import webwow.adapters.web.filters.AllowCrossOrigin;
 import webwow.adapters.web.filters.PreflightHandler;
-import webwow.repository.AlbumRepository;
+import webwow.domain.Album;
+import webwow.domain.AlbumRepository;
 
 /**
  * This endpoint class belongs to the web adapter layer.
@@ -59,6 +60,7 @@ public class AlbumsEndpoint {
         webServer.route((new Routes() {
             {
                 get("/albums").to(request -> getAlbums(request));
+//                get("/v1/albums").to(request -> getAlbums(request));
 
                 post("/albums").to(request -> addAlbum(request));
 
@@ -72,7 +74,7 @@ public class AlbumsEndpoint {
     }
 
     private Response getAlbums(Request request) {
-        List<AlbumModel> albums = repository.getAlbums();
+        List<Album> albums = repository.getAlbums();
 
         String jsonResponse = new Gson().toJson(albums);
         return Response.ok().contentType(CONTENT_TYPE_JSON).done(jsonResponse);
@@ -81,7 +83,7 @@ public class AlbumsEndpoint {
     private Response addAlbum(Request request) {
         try {
             // Can't get this to work with a record
-            AlbumModel album = new Gson().fromJson(request.body(), AlbumModel.class);
+            Album album = new Gson().fromJson(request.body(), Album.class);
             int givenID = repository.addAlbum(album);
 
             String jsonResponse = new Gson().toJson(("localhost:8080/albums/" + givenID));
@@ -105,7 +107,7 @@ public class AlbumsEndpoint {
 
         try {
             // request.body() == {"name": "name","artist": "artist","year": "year"}
-            AlbumModel album = new Gson().fromJson(request.body(), AlbumModel.class);
+            Album album = new Gson().fromJson(request.body(), Album.class);
             album.setId(id);
             repository.editAlbum(album);
             return Response.of(NO_CONTENT).done();

@@ -6,13 +6,13 @@ import java.sql.SQLException;
 
 public class DatabaseConnector {
 
-    public static Connection getConnection() {
+    public static Connection getConnection(String url) {
         Connection connection = null;
         try {
             Class.forName("org.postgresql.Driver");
-            connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/webwow", "postgres", "postgres");
+            connection = DriverManager.getConnection(url, "postgres", "postgres");
             if (connection != null) {
-                System.out.println("Connected to database");
+                System.out.println("Connected to database: " + url);
             } else {
                 System.out.println("Connection to database failed");
             }
@@ -24,6 +24,10 @@ public class DatabaseConnector {
             e.printStackTrace();
         }
         return connection;
+    }
+
+    public static Connection getConnection() {
+        return getConnection("jdbc:postgresql://localhost:5432/webwow");
     }
 
 }
